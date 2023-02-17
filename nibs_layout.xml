@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare" xmlns:xf="http://www.w3.org/2002/xforms">
+    <head meta_vertical_guides="" meta_horizontal_guides="">
+    	<w2:type>LAYOUT</w2:type>
+        <w2:buildDate/>
+        <w2:MSA/>
+        <xf:model>
+            <xf:instance>
+                <data xmlns=""/>
+            </xf:instance>
+            <w2:dataCollection>
+            </w2:dataCollection>
+        </xf:model>
+        <w2:mediaInfo>
+            <w2:media name="desktop"/>
+            <w2:media name="tablet"/>
+            <w2:media name="mobile"/>
+        </w2:mediaInfo>
+        <script type="javascript" lazy="false"><![CDATA[
+        
+			scwin.onpageload = function() {
+			
+			};
+			
+			/*
+				업 무 명: Main
+				작 성 자: LHC
+				작성일자: 2014-05-28
+				기능설명: 기본 Layout Main
+	        */
+			//최근 접속일시 표시
+			//footer의 onpageload 메소드로 대체
+        	//scwin.fncSetConnectDate();
+
+			/**
+				함수명: scwin.fncMainColse
+				설  명: 메인 공지사항 닫기 시 호출
+				인  자: 
+				리  턴: boolean (닫기:true, 닫기중지:false)
+			 */
+			scwin.fncMainColse = function(){
+				var closeYn = true;
+				
+				//메인 공지사항은 창닫기 안되도록 처리 요청 (2014.09.03 한기성대표)
+				closeYn = false;
+				
+				return closeYn;
+			};
+			
+        ]]></script>
+    </head>
+    <body ev:onpageload="scwin.onpageload">
+    	<xf:group id="WRAP" style="" class="">
+    		
+    		<w2:wframe id="hd_wframe" style="" scope="true" src="/view/mn/header.xml"></w2:wframe>
+			
+			<xf:group id="" style="" class="CONTAINER">	
+	    		<w2:windowContainer windowMaxNum="10" confirmTrueAction="newWindow" class="win_main" id="win_main"
+	    			style="" tooltipDisplay="true" useCloseButton="true" useConfirmMessage="false" windowTooltipDisplay="true"
+	    			fixArrangeFullScreen="true" toolbarPosition="bottom" useFixButton="true" frameMode="wframe"
+	    			confirmMessage="기존 화면이 존재합니다. 기존 화면을 사용하시겠습니까?" windowAutoResize="true">
+	    			<w2:windowToolbar position="bottom" style="background-image:url(/images/display_bg.gif); height:28px; width:600px;"
+	    				showWindowControlIcon="true">
+	    				<w2:nameLayer
+	    					style="position:absolute; line-height:21px;gap:1px;overflow:hidden; top:2px; width:103px;height:23px; background-image:url(/images/browser_basic.gif); font-size:11px; font-family:Dotum; color:#6d8096; padding-top:3px; padding-left:16px;">
+	    				</w2:nameLayer>
+	    				<w2:selectedNameLayer
+	    					style="position:absolute; overflow:hidden; line-height:21px; top:2px; width:103px;height:23px; background-image:url(/images/browser_select.gif); font-size:11px; font-family:Dotum; color:#30749e; padding-top:3px; padding-left:16px;">
+	    				</w2:selectedNameLayer>
+	    				<w2:controlIconLayer style="position:absolute; left:1px; top:1px; height:28px;width:166px;margin-top:2px;" iconGap="1px"
+	    					iconWidth="26px" iconHeight="21px">
+	    				</w2:controlIconLayer>
+	    			</w2:windowToolbar>
+	    			<script ev:event="onwindowchange(cId, nId)" type="javascript"><![CDATA[
+							//창 전환 시 메시지 초기화
+							ft_wframe.getWindow().scwin.fncSetFooterMsg("");
+						]]></script>
+	    		</w2:windowContainer>
+	    	</xf:group>
+	    		
+	    	<w2:wframe id="se_wframe" scope="true" style="z-index: 9999" src="/view/mn/side.xml" class="side"></w2:wframe>
+    		<w2:wframe id="ft_wframe" scope="true" style="position:fixed; bottom:0; left:0; width:100%; height:22px; padding-top:8px;background:#555;" src="/view/mn/footer.xml" class=""></w2:wframe>
+    			
+    	</xf:group>
+    </body>
+</html>

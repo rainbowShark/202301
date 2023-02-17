@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="/css/base.css" type="text/css"?>
+<?xml-stylesheet href="/css/login.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare" xmlns:xf="http://www.w3.org/2002/xforms">
+    <head>
+        <w2:type>COMPONENT</w2:type>
+        <w2:buildDate/>
+        <w2:MSA/>
+        <xf:model>
+            <w2:dataCollection baseNode="map"/>
+            <w2:workflowCollection/>
+        </xf:model>
+        <w2:layoutInfo/>
+        <w2:publicInfo method=""/>
+        <script lazy="false" type="text/javascript"><![CDATA[
+			/*
+				업 무 명: 로그인
+				작 성 자: LHC
+				작성일자: 2014-05-28
+				기능설명: 로그인 처리 한다
+	        */
+	        
+	        //=============================================================================
+	        // 1. 페이지 전역 변수 선언 및 할당
+	        //=============================================================================
+			scwin.gv_systemPath = gcm.SYS_COMMON;			//RequestMapping 경로	        			
+			
+	        //=============================================================================
+	        // 2. 페이지 이벤트 헨들러
+	        //============================================================================= 
+			scwin.onpageload = function(){
+				try {
+					//cm_pageInitialize();		//[필수] 모든 화면 공통 호출 JS
+					scwin.fncSetCommonCode();	//[공통] 기본 공통코드 설정
+					scwin.fncSetDefaultValue();	//[공통] 기본 Default 설정
+					msgWarning.setLabel(com.cm_getMessage("I0005"));
+	            } catch (e) {
+					alert("scwin.onpageload(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}				
+			}
+			
+	        //=============================================================================
+	        // 3. Load 후 초기설정 및 데이터 설정
+	        //=============================================================================
+	        scwin.fncSetCommonCode = function() {
+	            try {    	   
+	            } catch (e) {
+					alert("scwin.fncSetCommonCode(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+	        }
+	        	        
+	        scwin.fncSetDefaultValue = function() {
+	            try {
+					//초기 포커스 
+					ipt_userId.focus();
+					
+	            	//아이디 저장 조회
+	            	scwin.fncSetCookie("S");					
+	            } catch (e) {
+					alert("scwin.fncSetDefaultValue(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+	        }			
+			
+	        //=============================================================================
+	        // 4. 사용자 정의 함수
+	        //=============================================================================			
+	
+	        /**
+				함수명: scwin.fncQuery
+				설  명: 로그인 처리한다  
+				인  자: 
+				리  턴: 
+			 */
+			scwin.fncQuery = function(){
+	            try {
+	            
+	                //macAddr.setLabel(getMacAddress());	                
+					//if ( !fncCheckCondition() )		return;
+
+					//아이디 저장 
+					scwin.fncSetCookie("I");
+	
+					var requestData = {};
+					requestData.userId = com.cm_trim(ipt_userId.getValue());	//아이디
+					requestData.password = com.cm_encrypt(com.cm_trim(sec_password.getValue()));	//패스워드
+					//requestData.macAddr = com.cm_trim(macAddr.getLabel());	    //mac주소
+
+					var action		= "userSql";
+					var callBack	= scwin.fncQuery_RESULT;
+					com.cm_submitAjax(scwin.gv_systemPath, action, requestData, callBack);	//서버 ajax 통신
+	            } catch (e) {
+//					alert("scwin.fncQuery(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}			
+			}
+
+			scwin.fncQuery_RESULT = function(resultData){
+	            try {
+	            	com.cm_logPrint("resultdata=>"+JSON.stringify(resultData));	//결과로그 출력
+					
+					/**
+					* 로그인 결과 코드
+					* 		성공		: 0
+					* 		실패		: 1
+					* 		계정잠김	: 2
+					* 		비번변경(info)	: 3
+					* 		비번변경(process)	: 4
+					*		이메일 등록 요청 : 5
+					*		중복로그인 : 6
+					*/
+					var userInfo = resultData.userSql;
+							
+					var loginResult = resultData.loginResult;
+
+					//로그인 성공
+					if ( loginResult == "0" ){
+						scwin.fncGoMain();
+					}
+					
+					//로그인 실패 or 계정 잠김 
+					else if ( loginResult == "1" || loginResult == "2" ){
+						scwin.fncResetValue();
+					}  				
+					
+					//비번변경(info)
+					else if ( loginResult == "3") {
+						scwin.fncPopPasswordChange("info");
+					}
+					
+					//비번변경(process)
+					else if ( loginResult == "4" ){
+						scwin.fncPopPasswordChange("process");
+					}
+
+					//이메일 등록 요청 
+					else if ( loginResult == "5" ){
+						scwin.fncPopFindPasswordConfirm();
+					}
+					
+					//중복로그인 
+					else if ( loginResult == "6" ){
+						var ipAddress = userInfo.ipAddress;
+						var loginDate = userInfo.loginDate;
+						
+						if(confirm(com.cm_getMessage("LOGIN.W0003",loginDate,ipAddress))){	//{0} 에 동일한 사번으로 로그인한 사용자가 존재합니다. [로그인한 사용자IP: {1}] \\n로그인 하시겠습니까?
+
+							var requestData = {};
+							requestData.userId				= com.cm_trim(ipt_userId.getValue());		//아이디
+							requestData.password			= com.cm_trim(sec_password.getValue());	//패스워드
+							requestData.loginCheckFlag 	= "N";												//로그인체크  
+		
+							var action		= "userSql";
+							var callBack	= scwin.fncQuery_RESULT;
+							cm_submitAjax(scwin.gv_systemPath, action, requestData, callBack);	//서버 ajax 통신
+						}					
+						
+					}
+					
+					else if(loginResult == "7"){
+						cm_msg("현재 PC에서는 NIBS접근 권한이 없습니다.");
+					}	
+					//AOC 내선번호 변경 알림창 표시
+					else if(loginResult == "8"){            
+                        scwin.fncPopIntelNoChange(userInfo.intelNo);
+                    }
+
+                    //AOC 비번변경(info)
+                    else if ( loginResult == "9") {
+                        scwin.fncPopPasswordChangeAoc("aocinfo", userInfo.intelNo);
+                    }
+					
+                } catch (e) {
+                    alert("scwin.fncQuery_RESULT(): " + e.message);
+                    WebSquare.exception.printStackTrace(e);
+                }				
+            }
+			
+	        /**
+				함수명: scwin.fncCheckCondition
+				설  명: 조건 항목 Check
+				인  자: 
+				리  턴: 
+			 */			
+			scwin.fncCheckCondition = function() {
+	            try {
+					if (com.cm_trim(ipt_userId.getValue()) == "") {
+						alert(com.cm_getMessage("LOGIN.W0001"));		//User ID를 입력하세요.
+						ipt_userId.focus();
+						return false;
+					}
+					if (com.cm_trim(sec_password.getValue()) == "") {
+						alert(com.cm_getMessage("LOGIN.W0002"));		//Password 입력하세요
+						sec_password.focus();
+						return false;
+					} 
+					return true;
+	            } catch (e) {
+					alert("scwin.fncCheckCondition(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}
+			
+	        /**
+				함수명: scwin.fncSetCookie
+				설  명: 쿠키 값 셋팅 
+				인  자:  flag (I:입력, S:조회)
+				리  턴: 
+			 */				
+			scwin.fncSetCookie = function(flag){
+	            try {
+	            	//아이디 저장 
+	            	if ( flag == "I" ){
+						var checkYn = checkbox1.getValue();		//선택 시 1 
+						if ( checkYn == 1 ){
+							var userId = com.cm_trim(ipt_userId.getValue());
+							WebSquare.cookie.setCookie( "ID_SAVE" , userId );	//쿠키 저장 
+						}
+	            	}
+	            	
+	            	//저장된 아이디 체크 
+	            	else if ( flag == "S" ){
+	            		var userId = WebSquare.cookie.getCookie( "ID_SAVE" );
+	            		if ( userId != null ){
+	            			ipt_userId.setValue( userId );
+	            			checkbox1.setValue( "1" );
+	            			sec_password.focus();
+	            		}
+	            	}
+	            } catch (e) {
+					alert("scwin.fncSetCookie(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}			
+			}
+			
+	        /**
+				함수명: scwin.fncPopFindPassword
+				설  명: 비밀번호찾기 팝업
+				인  자: 
+				리  턴: 
+			 */
+			scwin.fncPopFindPassword = function(){
+	            try {
+	            	var callBack	= "fncPopFindPassword_RESULT";
+					var doc 			= cm_makeXmlDocForPopup({
+	    					CALLBACK	: callBack 	// 결과 받을 함수명 
+	   				});
+	            	cm_findPasswordPopup(doc);	//비밀번호찾기 팝업	  
+	            } catch (e) {
+					alert("scwin.fncPopFindPassword(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}
+
+			scwin.fncPopFindPassword_RESULT = function(){
+	            try {
+					
+	            } catch (e) {
+					alert("scwin.fncPopFindPassword_RESULT(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}		
+			
+	        /**
+				함수명: scwin.fncPopPasswordChange
+				설  명: 비번변경 팝업창을 띄운다
+				인  자: flag ( info: 비번변경기간알림 ,  process: 비번변경 ) 
+				리  턴: 
+			 */			
+			scwin.fncPopPasswordChange = function(flag){
+	            try {
+	            	var userId		= com.cm_trim(ipt_userId.getValue());		//아이디
+	            	var callBack	= "fncPopPasswordChange_RESULT";
+					var doc 			= cm_makeXmlDocForPopup({
+							userId		: userId,
+							flag      : flag, 
+	    				CALLBACK	: callBack 	// 결과 받을 함수명 
+	   				});
+	   				if ( flag == "info" ){
+	            		cm_passwordChangePopup2(doc);	//비밀번호변경 팝업(info)	   				
+	   				} else {
+	            		cm_passwordChangePopup(doc);	//비밀번호변경 팝업(process)
+	   				}
+	            } catch (e) {
+					alert("scwin.fncPopPasswordChange(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}
+
+			scwin.fncPopPasswordChange_RESULT = function(){
+	            try {
+					
+	            } catch (e) {
+					alert("scwin.fncPopPasswordChange(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}
+			
+			/**
+                함수명: scwin.fncPopPasswordChangeAoc
+                설  명: 비번변경 팝업창을 띄운다
+                인  자: flag ( aocinfo: 비번변경기간알림 ) 
+                리  턴: 
+            */     
+            scwin.fncPopPasswordChangeAoc = function(flag, inTelNo){
+                try {
+                    var userId    = com.cm_trim(ipt_userId.getValue());   //아이디
+                    var callBack  = "scwin.fncPopPasswordChangeAoc_RESULT";
+                    var doc       = cm_makeXmlDocForPopup({
+                        userId    : userId,
+                        flag      : flag,
+                        inTelNo   : inTelNo, 
+                        CALLBACK  : callBack  // 결과 받을 함수명 
+                    });
+            
+                    cm_passwordChangePopup2(doc); //비밀번호변경 팝업(info)           
+            
+                } catch (e) {
+                    alert("scwin.fncPopPasswordChangeAoc(): " + e.message);
+                    WebSquare.exception.printStackTrace(e);
+                }
+            }
+
+            scwin.fncPopPasswordChangeAoc_RESULT = function(){
+                    try {
+                
+                    } catch (e) {
+                alert("scwin.fncPopPasswordChangeAoc_RESULT(): " + e.message);
+                WebSquare.exception.printStackTrace(e);
+                }
+            }
+			
+	        /**
+				함수명: scwin.fncPopFindPasswordConfirm
+				설  명: 이메일 등록 요청 팝업
+				인  자: 
+				리  턴: 
+			 */			
+			scwin.fncPopFindPasswordConfirm = function(){
+	            try {
+	            	var callBack	= "fncPopFindPasswordConfirm_RESULT";
+					var doc 			= cm_makeXmlDocForPopup({
+	    					CALLBACK	: callBack 	// 결과 받을 함수명 
+	   				});
+	            	cm_findPasswordConfirmPopup(doc);	//이메일 등록 요청 팝업	  
+	            } catch (e) {
+					alert("scwin.fncPopFindPasswordConfirm(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}
+
+			scwin.fncPopFindPasswordConfirm_RESULT = function(){
+	            try {
+					
+	            } catch (e) {
+					alert("scwin.fncPopFindPasswordConfirm_RESULT(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}				
+			
+            /**
+                함수명: scwin.fncPopIntelNoChange
+                설  명: 내선번호 변경 팝업창을 띄운다
+                인  자:  
+                리  턴: 
+            */     
+            scwin.fncPopIntelNoChange = function(strInTelNo){
+                try {
+                    var userId    = com.cm_trim(ipt_userId.getValue());   //아이디
+                    var callBack  = "fncPopIntelNoChange_RESULT";
+                var doc       = cm_makeXmlDocForPopup({
+                    userId    : userId,
+                    inTelNo   : strInTelNo, 
+                    CALLBACK  : callBack  // 결과 받을 함수명 
+                });
+                    
+                cm_inTelNoChangePopup(doc); //비밀번호변경 팝업(info)           
+            
+                } catch (e) {
+                alert("scwin.fncPopIntelNoChange(): " + e.message);
+                WebSquare.exception.printStackTrace(e);
+                }
+            }
+
+            scwin.fncPopIntelNoChange_RESULT = function(){
+                try {
+            
+                } catch (e) {
+                alert("scwin.fncPopIntelNoChange_RESULT(): " + e.message);
+                WebSquare.exception.printStackTrace(e);
+                }
+            }
+
+	        /**
+				함수명: scwin.fncGoMain
+				설  명: 메인 페이지 이동
+				인  자: 
+				리  턴: 
+			 */			
+			scwin.fncGoMain = function(){
+	            try {
+					//cm_moveW2xPath(scwin.gv_systemPath + "/main.do");
+
+					/*
+					* 메인페이지 이동  (location.href 로 index.jsp 로 이동시에는 로그아웃 되지 않도록 logougFlag 값 선언)
+					* index.jsp 에서 escCTI.jsp frame 선언 재확인 위함
+					*/
+					window.top.logoutFlag = "N";
+					window.top.location.href = "/index.do";
+							
+	            } catch (e) {
+					alert("scwin.fncGoMain(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}	
+			}	
+
+	        /**
+				함수명: scwin.fncResetValue
+				설  명: 입력 Value 초기화
+				인  자: 
+				리  턴: 
+			 */			
+			scwin.fncResetValue = function(){
+	            try {
+					ipt_userId.setValue( "" );
+					sec_password.setValue( "" );
+					ipt_userId.focus();
+	            } catch (e) {
+					alert("scwin.fncResetValue(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+			}
+			
+			scwin.getMacAddress = function(){
+                document.macaddressapplet.setSep( "-" );
+                var macs = eval(document.macaddressapplet.getMacAddressesJSON());
+                var mac = "00-00-00-00-00-00-00-E0";
+                for(var i=0; i<macs.length; i++){
+                    if( macs[i] == mac ){
+                        continue;
+                    }else{
+                        mac = macs[i];
+                        break;
+                    }
+                }
+			    return mac;
+			}		
+			
+			/**
+                함수명: scwin.fncPopFindPassword
+                설  명: nibs 로그인 권한 요청 팝업
+                인  자: 
+                리  턴: 
+             */
+            scwin.fncLoginReqMng = function(){
+                try {
+                    var callBack    = "fncLoginReqMng_RESULT";
+                    var doc             = cm_makeXmlDocForPopup({
+                            CALLBACK    : callBack  // 결과 받을 함수명
+                            , mac : macAddr.getValue()
+                    });
+                    
+                    cm_loginReqPopup(doc);
+                    
+                } catch (e) {
+                    alert("scwin.fncLoginReqMng(): " + e.message);
+                    WebSquare.exception.printStackTrace(e);
+                }
+            }
+
+            scwin.fncLoginReqMng_RESULT = function(){
+                try {
+                    
+                } catch (e) {
+                    alert("scwin.fncLoginReqMng_RESULT(): " + e.message);
+                    WebSquare.exception.printStackTrace(e);
+                }
+            }
+			
+			//$(function(){
+            //        macAddr.setLabel(getMacAddress()); 
+            //        getMacAddresses();                  
+			//});
+
+			scwin.ipt_userId_onkeydown = function(e) {
+				com.cm_inputEnter(e, scwin.fncQuery);
+			};
+
+			scwin.sec_password_onkeydown = function(e) {
+				com.cm_inputEnter(e, scwin.fncQuery);
+			};
+			
+]]></script>
+		<style type="text/css"><![CDATA[
+    		body {background:url(/images/login/NIBS_login.gif) repeat center center;}
+    	]]></style>
+    </head>
+	<body ev:onpageload="scwin.onpageload">
+		<xf:group id="lg_wrap" style="" class="" tagname="">
+			<xf:group id="lg_Container_wrap" style="" class="lg_Container_wrap">
+				<xf:group id="lg_Header" style="" class="lg_Header">
+					<xf:group id="group5" style="" tagname="h1">
+						<xf:image id="image1" style="" alt="Please Login NIBS+" src="/images/login/login_logo_h1.gif"></xf:image>
+					</xf:group>
+				</xf:group>
+				<xf:group id="lg_Container" style="" class="lg_Container">
+					<xf:group id="group6" style="margin-top:-15px;" class="login_form">
+						<xf:group class="clearfix" id="group16" style="text-align:right;padding-bottom:10px;">
+							<w2:textbox id="macAddr" label="address loading..." tagname="label"></w2:textbox>
+						</xf:group>
+						<xf:group id="group7" style="" class="clearfix">
+							<w2:textbox id="textbox1" style="" label="User ID" tagname="label" class="login_label"></w2:textbox>
+							<xf:group id="group8" style="" class="fr">
+								<xf:select id="checkbox1" cols="" appearance="full" style="" selectedindex="-1" rows="" class="fl">
+									<xf:choices>
+										<xf:item>
+											<xf:label><![CDATA[]]></xf:label>
+											<xf:value><![CDATA[1]]></xf:value>
+										</xf:item>
+									</xf:choices>
+								</xf:select>
+								<w2:textbox id="textbox4" label="아이디 저장" class="id_txt_ch" for="checkbox1" style=""></w2:textbox>
+							</xf:group>
+						</xf:group>
+						<xf:group id="group9" style="" class="login_ipt_bg">
+							<xf:input id="ipt_userId" style="width:252px;height:31px;" class="ipt_login" maxByteLength="7" ev:onkeydown="scwin.ipt_userId_onkeydown">
+							</xf:input>
+						</xf:group>
+						<xf:group id="group10" style="" class="clearfix mgt25">
+							<w2:textbox id="textbox2" style="" label="Password" tagname="label" class="login_label"></w2:textbox>
+							<xf:image id="image3" style="" class="id_txt_img" src="/images/login/txt_pw.gif">
+								<script ev:event="onclick(e)" type="javascript"><![CDATA[
+									scwin.fncPopFindPassword();
+								 ]]></script>
+							</xf:image>
+						</xf:group>
+						<xf:group id="group15" style="" class="login_ipt_bg">
+							<xf:secret id="sec_password" class="ipt_login" style="width:252px;height:31px;" maxByteLength="50" ev:onkeydown="scwin.sec_password_onkeydown">
+							</xf:secret>
+						</xf:group>
+						<xf:image id="image4" src="/images/login/btn_login.gif" alt="Login " class="mgt10 cpt">
+							<script ev:event="onclick(e)" type="javascript"><![CDATA[
+								scwin.fncQuery();
+							]]></script>
+						</xf:image>
+					</xf:group>
+					<xf:group class="clearfix" id="group17" style="position: absolute ;left:500px;top:330px;width:510px;height:20px;">
+                        <w2:textbox id="msgWarning" label="" tagname="label"></w2:textbox>
+                    </xf:group>	
+                    <xf:group class="clearfix" id="group171" style="position: absolute ;left:620px;top:330px;width:510px;height:20px; margin-top:30px">
+                        <a href="/common/nibs_set_manual.pptx" download="NIBS 설정 메뉴얼">
+                            <w2:textbox id="LoginManual" label="NIBS+ 설정 메뉴얼 다운로드" class="cpt" tagname="label" style="color:red;font-weight:bold"></w2:textbox>
+                        </a>
+                        <w2:textbox id="loginReqMngBtn" label="PC를 변경하셨나요? NIBS 로그인 권한등록" class="cpt" tagname="label" style="margin-left:20px;color:blue;text-decoration:underline">
+	                        <script ev:event="onclick(e)" type="javascript"><![CDATA[
+	                           scwin.fncLoginReqMng();
+	                        ]]></script>
+                        </w2:textbox>
+                    </xf:group> 				
+				</xf:group>
+				<xf:group id="lg_Footer" class="lg_Footer">
+					<w2:textbox id="textbox3" style="" label="Copyright(c) NICE e-Banking Service. All Rights Reserved."></w2:textbox>
+				</xf:group>
+			</xf:group>
+
+		</xf:group>
+	</body>
+</html>
