@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare" xmlns:xf="http://www.w3.org/2002/xforms">
+    <head>
+    	<w2:type>DEFAULT</w2:type>
+        <w2:buildDate/>
+        <xf:model>
+            <xf:instance>
+                <data xmlns=""/>
+            </xf:instance>
+            <w2:dataCollection baseNode="map">
+            	<w2:dataList baseNode="list" repeatNode="map" id="dlt_menu" saveRemovedData="true">
+            		<w2:columnInfo>
+            			<w2:column id="mlvl" name="depth" dataType="text" length="" encYN="false"></w2:column>
+            			<w2:column id="menuId" name="대메뉴ID" dataType="text" length="" encYN="false"></w2:column>
+            			<w2:column id="menuNm" name="대메뉴명" dataType="text" length="" encYN="false"></w2:column>
+            			<w2:column id="urlStr" name="URL" dataType="text" length="" encYN="false"></w2:column>
+            			<w2:column id="fav" name="즐겨찾기" dataType="text"></w2:column>
+            		</w2:columnInfo>
+            	</w2:dataList>
+            	<w2:dataMap baseNode="map" id="dma_fav">
+            		<w2:keyInfo>
+            			<w2:key id="status" name="상태" dataType="text" length="" encYN="false"></w2:key>
+            			<w2:key id="menuId" name="메뉴코드" dataType="text" length="" encYN="false"></w2:key>
+            			<w2:key id="memberId" name="name3" dataType="text"></w2:key>
+            			<w2:key id="sysName" name="name4" dataType="text"></w2:key>
+            			<w2:key id="sysType" name="name5" dataType="text"></w2:key>
+            			<w2:key id="workGubun" name="name6" dataType="text"></w2:key>
+            		</w2:keyInfo>
+            	</w2:dataMap>
+            	<w2:dataList baseNode="list" repeatNode="map" id="dlt_fav" saveRemovedData="true">
+            		<w2:columnInfo>
+            			<w2:column id="menuNm" name="메뉴명" dataType="text" length="" encYN="false"></w2:column>
+            			<w2:column id="url" name="메뉴경로" dataType="text" length="" encYN="false"></w2:column>
+            			<w2:column id="menuId" name="메뉴코드" dataType="text" length="" encYN="false"></w2:column>
+            			<w2:column id="mlvl" name="메뉴레벨" dataType="text" length="" encYN="false"></w2:column>
+            		</w2:columnInfo>
+            	</w2:dataList>
+            </w2:dataCollection>
+            <w2:workflowCollection>
+            </w2:workflowCollection>
+        </xf:model>
+		<script type="text/javascript"><![CDATA[
+		   scwin.onpageload = function () {
+       			
+           };
+        
+		
+        	scwin.setMenuInfo = function() {
+
+				// ---------------------- generator로 메뉴 구성 시작 -------------------------//
+				firstMenuGen.removeAll();
+
+				var tmpDataArr = dlt_menu.getAllJSON(),
+					idxDepth1 = 0,
+					idxDepth2 = 0,
+					idxDepth3 = 0,
+                    idxDepth4 = 0,
+					dataObj,
+					menuDepth,
+					i,
+					firstMenuLabel,
+                    secondMenuLabel,
+                    thirdMenuLabel,
+                    fouthMenuLabel,
+					menuGrp,
+                    secondMenuGrp,
+					thirdMenuGrp, 
+					secondMenuGen,
+					thirdMenuGen,
+                    fourthMenuGen,
+					btnLabel;
+
+					//첫번째 메뉴 셋팅
+				for (i=0; i<tmpDataArr.length; i++) {
+					dataObj = tmpDataArr[i];
+					menuDepth = dataObj.mlvl;
+					
+					//console.log("[ " + i + " ] 번째 dataObj : " + JSON.stringify(dataObj));
+
+					if (menuDepth == "1") {
+						// first generator에 컴포넌트 삽입 후, 값을 셋팅.
+						idxDepth1 = firstMenuGen.insertChild();
+
+						firstMenuLabel = firstMenuGen.getChild(idxDepth1, "menu1_label");
+						firstMenuLabel.setValue(dataObj.menuNm);
+					
+						// 메뉴를 기본으로 펼쳐서 셋팅.
+						menuGrp = firstMenuGen.getChild(idxDepth1, "firstMenuGrp");
+						menuGrp.toggleClass("btn_01_open");
+					}
+							
+					if (menuDepth == "2") {
+						// second generator에 컴포넌트 삽입 후, 값을 셋팅.
+						secondMenuGen = firstMenuGen.getChild(idxDepth1, "secondMenuGen");
+						
+						idxDepth2 = secondMenuGen.insertChild();
+
+						secondMenuLabel = secondMenuGen.getChild(idxDepth2, "menu2_label");
+						secondMenuLabel.setValue(dataObj.menuNm);
+                        secondMenuLabel.setUserData("menuId", dataObj.menuId);
+
+                        secondMenuGrp = secondMenuGen.getChild(idxDepth2, "secondMenuGrp");
+
+                        if (dataObj.urlStr != "") {
+                            secondMenuLabel.setUserData("SRC_PATH", dataObj.urlStr);
+
+                            btnLabel = secondMenuGen.getChild(idxDepth2, "btn_fav");
+                            btnLabel.setUserData("t_menuCode", dataObj.menuId);
+
+                            if (dataObj.fav == "v") {
+                                btnLabel.addClass("on");
+                                btnLabel.setUserData("t_favStatus", "T");
+                            } else {
+                                btnLabel.removeClass("on");
+                                btnLabel.setUserData("t_favStatus", "F");
+                            }
+
+                        } else {
+
+                            btnLabel = secondMenuGen.getChild(idxDepth2, "btn_fav");
+                            btnLabel.hide();
+
+                        }
+
+                        if (idxDepth2 === 0) {
+                            secondMenuGen.setUserData("menuOpenYn", "Y");
+                            secondMenuGrp.addClass("btn_02_open");
+                        } else {
+                            secondMenuGen.setUserData("menuOpenYn", "N");
+                            secondMenuGrp.removeClass("btn_02_open");
+                        }
+					}
+						
+					if (menuDepth == "3") {
+                        // third generator에 컴포넌트 삽입 후, 값을 셋팅.
+                        thirdMenuGen = secondMenuGen.getChild(idxDepth2, "thirdMenuGen");
+                        idxDepth3 = thirdMenuGen.insertChild();
+                        
+                        thirdMenuLabel = thirdMenuGen.getChild(idxDepth3, "menu3_label");
+                        thirdMenuLabel.setValue(dataObj.menuNm);
+                        thirdMenuLabel.setUserData("menuId", dataObj.menuId);
+
+                        thirdMenuGrp = thirdMenuGen.getChild(idxDepth3, "thirdMenuGrp");
+
+                        if (dataObj.urlStr != "") {
+                            thirdMenuLabel.setUserData("menuNm", dataObj.menuNm);
+                            thirdMenuLabel.setUserData("programCd", dataObj.programCd);
+
+                            // 즐겨찾기 마크업
+                            btnLabel = thirdMenuGen.getChild(idxDepth3, "btn_fav");
+                            btnLabel.setUserData("t_menuCode", dataObj.menuId);
+
+                            if (dataObj.fav == "v") {
+                                btnLabel.addClass("on");
+                                btnLabel.setUserData("t_favStatus", "T");
+                            } else {
+                                btnLabel.removeClass("on");
+                                btnLabel.setUserData("t_favStatus", "F");
+                            }
+                            
+                            thirdMenuGrp.removeClass("btn_03_open");
+                            thirdMenuGrp.removeClass("on");
+
+                        } else {
+                            btnLabel = thirdMenuGen.getChild(idxDepth3, "btn_fav");
+                            btnLabel.hide();
+
+                            thirdMenuGrp.addClass("btn_03_open");
+                            thirdMenuGrp.addClass("on");
+                        }
+
+                        // 첫번째 메뉴는 오픈한다;
+                        if (i === 2) {
+                            thirdMenuGen.setStyle("display", "block");
+                            thirdMenuGen.setStyle("visibility", "visible");
+                        }
+
+                        // URL 유무와 관계없이 오픈상태로 메뉴상태를 저장;
+                        // console.log(">>>>> display :" + thirdMenuGen.getStyle("display"));
+
+                        if (thirdMenuGen.getStyle("display") == "block") {
+                            thirdMenuGen.setUserData("menuOpenYn", "Y");
+                        } else {
+                            thirdMenuGen.setUserData("menuOpenYn", "N");
+                        }
+					}
+
+                    if (menuDepth == "4") {
+						// third generator에 컴포넌트 삽입 후, 값을 셋팅.
+						fourthMenuGen = thirdMenuGen.getChild(idxDepth3, "fourthMenuGen");
+						fourthMenuGen.setUserData("menuOpenYn", "Y");
+						idxDepth4 = fourthMenuGen.insertChild();
+					
+						fouthMenuLabel = fourthMenuGen.getChild(idxDepth4, "menu4_label");
+						fouthMenuLabel.setValue(dataObj.menuNm);
+						fouthMenuLabel.setUserData("menuId", dataObj.menuId);
+						fouthMenuLabel.setUserData("menuNm", dataObj.menuNm);
+						fouthMenuLabel.setUserData("programCd", dataObj.programCd);
+						
+                        // 즐겨찾기 마크업
+						btnLabel = fourthMenuGen.getChild(idxDepth4, "btn_fav");
+						btnLabel.setUserData("t_menuCode", dataObj.menuId);
+
+                        if (dataObj.fav == "v") {
+                            btnLabel.addClass("on");
+                            btnLabel.setUserData("t_favStatus", "T");
+                        } else {
+                            btnLabel.removeClass("on");
+                            btnLabel.setUserData("t_favStatus", "F");
+                        }
+					}
+				} // End of For;
+
+                // 즐겨찾기 조회
+                scwin.setupdateFavCallback();
+
+				// ---------------------- generator로 메뉴 구성 종료 -------------------------//
+			};
+			
+			function dlt_menu_onclick() {
+				var selectedMenu = dlt_menu.getMatchedJSON("menuId", sel_menu.getSelectedValue());
+				var resultURL = selectedMenu[0].urlStr;
+				
+				if ( resultURL != "" ) {
+					cm_moveW2xPath( resultURL );
+				}
+            };
+            
+            /**
+				함수명: fncLogout
+				설  명: 로그아웃 처리
+				인  자: 
+				리  턴: 
+			 */
+	        function fncLogout() {
+	        	try {
+	        		if(confirm(cm_getMessage("W0008", "로그아웃"))){					//로그아웃 하시겠습니까?
+	        			//앱호출 -> 로그아웃
+	        			cm_AppLogout(SS_userId);
+	        			
+						var requestData		= {};								
+						var gv_systemPath	= "/mo/lgnmblcm";
+						var action			= "logout";
+						var callBack		= fncLogout_RESULT;
+						cm_submitAjax(gv_systemPath, action, requestData, callBack);	//서버 ajax 통신
+					}	
+	        	} catch (e) {
+					alert("fncLogout(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+	        };
+			
+	        function fncLogout_RESULT(resultData){
+	            try {
+					cm_moveW2xPath("mo/lgnmblcm/login.do&logoutYn=Y&logoutUserId=" + SS_userId);           //로그인 페이지
+							
+	      		} catch (e) {
+					alert("fncLogout_RESULT(): " + e.message);
+					WebSquare.exception.printStackTrace(e);
+				}
+      		};
+      		
+		    scwin.menu1_label_onclick = function(){
+                var menuIdx = this.getGeneratedIndex(),
+                    firstGenObj = $p.getComponentById("firstMenuGen"),
+                    secondGenObj = firstGenObj.getChild(menuIdx, "secondMenuGen"),
+                    menuGrp = firstGenObj.getChild(menuIdx, "firstMenuGrp");
+                
+                menuGrp.toggleClass("btn_01_open");
+
+                if(secondGenObj.getUserData("menuOpenYn") === "Y") {
+                    secondGenObj.hide();
+                    secondGenObj.setUserData("menuOpenYn", "N");
+                }else{
+                    secondGenObj.show();
+                    secondGenObj.setUserData("menuOpenYn", "Y");
+                }
+            };
+
+            scwin.menu2_label_onclick = function() {
+
+                var selectedMenu = dlt_menu.getMatchedJSON("menuId", this.getUserData("menuId"));
+                var t_url = selectedMenu[0].urlStr;
+
+                if (t_url != "") {
+                    cm_moveW2xPath( t_url );
+                } else {
+                    var menuIdx = this.getGeneratedIndex(),
+                        secondGenObj = this.getGenerator(),
+                        thirdGenObj = secondGenObj.getChild(menuIdx, "thirdMenuGen"),
+                        menuGrp = secondGenObj.getChild(menuIdx, "secondMenuGrp");
+
+                    if(thirdGenObj.getUserData("menuOpenYn") == "Y") {
+                        thirdGenObj.hide();
+                        thirdGenObj.setUserData("menuOpenYn", "N");
+                        menuGrp.removeClass("btn_02_open");
+                    }else{
+                        thirdGenObj.show();
+                        thirdGenObj.setUserData("menuOpenYn", "Y");
+                        menuGrp.addClass("btn_02_open");
+                    }
+                }
+            };
+
+            scwin.menu3_label_onclick = function(){
+				var selectedMenu = dlt_menu.getMatchedJSON("menuId", this.getUserData("menuId"));
+                var t_url = selectedMenu[0].urlStr;
+
+                if (t_url != "") {
+					cm_moveW2xPath( t_url );
+                } else {
+                    var idxNum = this.getGeneratedIndex();
+                    
+
+                    var t_gen = this.getGenerator();
+                    var thirdMenuGrp = t_gen.getChild(idxNum, "thirdMenuGrp");
+
+                    thirdMenuGrp.addClass("btn_03_open");
+
+                    var t_childGen = t_gen.getChild(idxNum, "fourthMenuGen");
+                    if (t_childGen.getStyle("display") == "none") {
+                        t_childGen.setStyle("display", "block");
+                        t_childGen.addClass("on");
+                        
+                        thirdMenuGrp.addClass("on");
+                    } else {
+                	    t_childGen.setStyle("display", "none");
+                	    t_childGen.removeClass("on");
+
+                        thirdMenuGrp.removeClass("on");
+                    }
+                }
+            };
+
+            scwin.menu4_label_onclick = function(){
+				var selectedMenu = dlt_menu.getMatchedJSON("menuId", this.getUserData("menuId"));
+
+                if (selectedMenu.length > 0) {
+                    var tURL = selectedMenu[0].urlStr;
+					cm_moveW2xPath( tURL );
+                }
+            };
+
+			scwin.btn_fav_onclick = function (e) {
+
+                //generator에서 btn_fav에 접근한 후 데이터를 가져오기
+                var numIdx = this.getGeneratedIndex();
+                var btnFav = this.getGenerator().getChild(numIdx, "btn_fav");
+
+                var menuCode = btnFav.getUserData("t_menuCode");
+                var favStatus = btnFav.getUserData("t_favStatus");
+
+                scwin.updateFav(menuCode, favStatus);
+
+                if (favStatus == "T") {
+                    favStatus = "F";
+                    
+                    btnFav.removeClass("on");
+                } else {
+                    favStatus = "T";
+                    btnFav.addClass("on");
+                }
+
+                btnFav.setUserData("t_menuCode", menuCode);
+                btnFav.setUserData("t_favStatus", favStatus);
+            };
+
+            scwin.updateFav = function (menuCode, favStatus) {
+                if (favStatus == "F") {
+                    favStatus = "I";
+                } else if (favStatus == "T") {
+                    favStatus = "D"
+                }
+
+                dma_fav.set("menuId", menuCode);
+	            dma_fav.set("status", favStatus);
+                dma_fav.set("memberId", SS_userId);
+                dma_fav.set("workGubun", SS_workGubun);
+                dma_fav.set("sysName", "mo");
+                dma_fav.set("sysType", "");
+
+                var action    = "updateFav";            // 즐겨찾기 저장, 수정
+								
+				var callBack  = scwin.setupdateFavCallback;
+                cm_submitAjax("", action, dma_fav.getJSON(), callBack, false, false);  //서버 ajax 통신
+            }
+            
+            scwin.setupdateFavCallback = function (e) {
+                dma_fav.set("memberId", SS_userId);
+                dma_fav.set("sysName", "mo");
+                dma_fav.set("sysType", "NULL");
+                dma_fav.set("workGubun", SS_workGubun); 
+
+                var action    = "selectFavList";
+                var callBack  = scwin.updateFavList;
+
+                cm_submitAjax("", action, dma_fav.getJSON(), callBack, false, false);  //서버 ajax 통신
+            };
+
+			scwin.updateFavList =  function(e) {
+                if (e.rtn_message == "SUCCESS") {
+                    // 업데이트가 0건 이상일 경우 즐겨찾기 리스트 갱신
+                    var arrList = e.resultList;
+
+                    dlt_fav.removeAll();
+                    if (parseInt(arrList.length) > 0) {
+                        dlt_fav.setJSON(arrList);
+                    }
+                }
+            };
+
+			function anc_menu_onclick() {
+                gr_tab_menu.setStyle("display", "block");
+                gr_tab_menu02.setStyle("display", "none");
+                grp_menu.setStyle("background-color", "#042660");
+                anc_menu.setStyle("color", "#fff");
+                grp_favMenu.setStyle("background-color", "#fff");
+                anc_menu02.setStyle("color", "#042660");
+            };
+
+            function anc_menu02_onclick() {
+                gr_tab_menu.setStyle("display", "none");
+                gr_tab_menu02.setStyle("display", "block");
+                grp_menu.setStyle("background-color", "#fff");
+                anc_menu.setStyle("color", "#042660");
+                grp_favMenu.setStyle("background-color", "#042660");
+                anc_menu02.setStyle("color", "#fff");
+
+                /***** 즐겨찾기 generator를 생성 시작 *****/
+                firstFavGen.removeAll();
+
+                var tmpFavArr = dlt_fav.getAllJSON(),
+                    idx = 0,
+                    dataObj,
+                    i,
+                    favLabel;
+
+                for (i=0; i<tmpFavArr.length; i++) {
+                    dataObj = tmpFavArr[i];
+
+                    console.log("[ " + i + " ] 번째 dataObj : " + JSON.stringify(dataObj));
+
+                    idx = firstFavGen.insertChild();
+
+                    favLabel = firstFavGen.getChild(idx, "fav_label");
+                    favLabel.setValue(dataObj.menuNm);
+                    favLabel.setUserData("menuId", dataObj.menuId)
+                    favLabel.setUserData("menuNm", dataObj.menuNm)
+                }
+                /***** 즐겨찾기 generator를 생성 종료 *****/
+            };
+
+			scwin.fav_label_onclick = function() {
+                var idx = this.getGeneratedIndex();
+                var favLabel = firstFavGen.getChild(idx, "fav_label");
+                var tCode = favLabel.getUserData("menuId");
+                var menuInfo = dlt_menu.getMatchedJSON("menuId", tCode);
+                var tURL = menuInfo[0].urlStr;
+
+				if ( tURL != "" ) {
+					cm_moveW2xPath( tURL );
+				}
+            };]]></script>
+    </head>
+    <body>
+    	<xf:group id="" style="" class="side_top">
+    		<w2:textbox id="" label="" style="" tagname="h2"></w2:textbox><xf:trigger type="button" id="trigger1" style="" ev:onclick="fncLogout" class="side_logout">
+    		<xf:label><![CDATA[로그아웃]]></xf:label>
+    	</xf:trigger><w2:anchor class="" ev:onclick="fncShowMoMenu" id="m_allmenu1" outerDiv="false" style="">
+    			<xf:label></xf:label>
+    		</w2:anchor>
+    	</xf:group>
+    	<xf:group class="grp_tab" id="" style="">
+			<xf:group class="shortcut_box" id="gr_shortcut_box">
+			</xf:group>
+			<xf:group class="tab_tit" id="" style="" tagname="ul">
+				<xf:group class="" id="grp_menu" style="background:#042660;" tagname="li">
+					<w2:anchor class="" ev:onclick="anc_menu_onclick" id="anc_menu" outerDiv="false" style="color:#fff;">
+						<xf:label><![CDATA[메뉴]]></xf:label>
+					</w2:anchor>
+				</xf:group>
+				<xf:group id="grp_favMenu" style="" tagname="li" >
+					<w2:anchor ev:onclick="anc_menu02_onclick" id="anc_menu02" outerDiv="false" style="">
+						<xf:label><![CDATA[즐겨찾기]]></xf:label>
+					</w2:anchor>
+				</xf:group>
+		    	<xf:group id="swh_lnbbox" class="tab_conbox">
+					<xf:group style="" id="gr_tab_menu" class="">
+			    		<w2:generator style="width:300px;" id="firstMenuGen">
+						   	<xf:group style="display:none;" id="firstMenuGrp" class="">
+						   		<w2:anchor ev:onclick="scwin.menu1_label_onclick" clickEventElement="outerDiv"  id="menu1_label" class="">
+						   			<xf:label></xf:label>
+						   		</w2:anchor>
+						   	</xf:group>
+							<w2:generator style="" id="secondMenuGen">
+						   		<xf:group style="" id="secondMenuGrp" class="mo_2depth">
+						   			<xf:trigger class="btn_fav" ev:onclick="scwin.btn_fav_onclick" id="btn_fav" style="" type="button" toolTip="즐겨찾기를 추가/해제합니다">
+										<xf:label></xf:label>
+									</xf:trigger>
+						   			<w2:anchor ev:onclick="scwin.menu2_label_onclick" clickEventElement="outerDiv" id="menu2_label" class="mo_2depth_link">
+						   				<xf:label></xf:label>
+						   			</w2:anchor>
+						   		</xf:group>
+						   		<w2:generator style="" id="thirdMenuGen" class="mo_2depth1_top1">
+						   			<xf:group style="" id="thirdMenuGrp" class="mo_2depth1">
+						   				<xf:trigger class="btn_fav" ev:onclick="scwin.btn_fav_onclick" id="btn_fav" style="" type="button" toolTip="즐겨찾기를 추가/해제합니다">
+											<xf:label></xf:label>
+										</xf:trigger>
+						   				<w2:anchor ev:onclick="scwin.menu3_label_onclick" clickEventElement="outerDiv" style="" id="menu3_label"
+						   					class="" escape="false">
+						   					<xf:label></xf:label>
+						   				</w2:anchor>
+						   			</xf:group>
+						   			<w2:generator style="" id="fourthMenuGen" class="mo_2depth1_top2">
+							   			<xf:group  id="fourthMenuGrp" class="mo_2depth2">
+							   				<xf:trigger class="btn_fav" ev:onclick="scwin.btn_fav_onclick" id="btn_fav" style="" type="button" toolTip="즐겨찾기를 추가/해제합니다">
+												<xf:label></xf:label>
+											</xf:trigger>
+							   				<w2:anchor ev:onclick="scwin.menu4_label_onclick" clickEventElement="outerDiv" style="" id="menu4_label"
+							   					class="" escape="false">
+							   					<xf:label></xf:label>
+							   				</w2:anchor>
+							   			</xf:group>
+							   		</w2:generator>
+						   		</w2:generator>
+							</w2:generator>
+						</w2:generator>
+			    	</xf:group>
+			    	<xf:group style="display: none;" id="gr_tab_menu02" class="tab_con scrollbar">
+						<w2:generator style="" id="firstFavGen">
+						    <xf:group style="" id="firstFavGrp" class="">
+						    	<w2:anchor ev:onclick="scwin.fav_label_onclick" clickEventElement="outerDiv" id="fav_label" class="">
+						    		<xf:label></xf:label>
+								</w2:anchor>
+							</xf:group>
+						</w2:generator>
+					</xf:group>
+				</xf:group>
+			</xf:group>
+		</xf:group>
+    </body>
+</html>
